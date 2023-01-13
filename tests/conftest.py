@@ -1,4 +1,4 @@
-import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
 from app import main, models
@@ -6,7 +6,7 @@ from app.database import engine, get_db
 from app.config import settings
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 def app():
     if not settings.TESTING:
         raise SystemError("TESTING environment must be set true")
@@ -14,7 +14,7 @@ def app():
     return main.app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def session():
     db = next(get_db())
     try:
@@ -23,13 +23,13 @@ async def session():
         db.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def default_client(app):
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app):
     async with AsyncClient(app=app, base_url="http://test/v1") as ac:
         models.Base.metadata.drop_all(bind=engine)
@@ -37,7 +37,7 @@ async def client(app):
         yield ac
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def user(session) -> models.User:
     row = models.User(username="fc2021", first_name="fast", last_name="campus")
     session.add(row)
@@ -46,7 +46,7 @@ def user(session) -> models.User:
     return row
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def add_quiz(session):
     def func(question: str = None, content: str = None, answer: int = None) -> models.Quiz:
         r = models.Quiz(
@@ -61,7 +61,7 @@ def add_quiz(session):
     return func
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def mock_telegram(monkeypatch):
     from app.lib.telegram import Telegram
 
